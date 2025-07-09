@@ -167,6 +167,11 @@ uint8_t currentMenuViewOffset;              /* scroll offset in the current menu
 uint32_t blocking_enc;
 uint8_t lastEncoderBits;
 uint32_t encoderPosition;
+
+static unsigned long lastEncoderTime = 0;
+static int encoderSpeedMultiplier = 1;
+static const unsigned long FAST_ROTATION_THRESHOLD = 100;
+static const unsigned long VERY_FAST_ROTATION_THRESHOLD = 50;
 #if (SDCARDDETECT > 0)
 bool lcd_oldcardstatus;
 #endif
@@ -2003,8 +2008,3 @@ void copy_and_scalePID_d()
 }
 
 #endif //ULTRA_LCD
-
-static unsigned long lastEncoderTime = 0;
-static int encoderSpeedMultiplier = 1;
-static const unsigned long FAST_ROTATION_THRESHOLD = 100;
-static const unsigned long VERY_FAST_ROTATION_THRESHOLD = 50;
