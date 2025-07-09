@@ -527,10 +527,16 @@ static void lcd_implementation_status_screen()
     lcd.setCursor(0, 2); //Änderung31.05.2020
     //lcd.print(LCD_STR_FEEDRATE[0]);
     //lcd.print(ftostr22(puller_feedrate));  //give the feed rate in mm/sec
+
+    lcd_printPGM(PSTR("H:"));
+    int heater_power = (soft_pwm[0] * 100) / 255;
+    lcd.print(itostr3(heater_power));
+    lcd.print('%');
     
-    lcd_printPGM(PSTR("Puller:"));
+    lcd.setCursor(8, 2);
+    lcd_printPGM(PSTR("P:"));
     lcd.print(ftostr22(puller_feedrate*(60.0/pcirc)));
-    lcd_printPGM(PSTR("rpm     "));
+    lcd_printPGM(PSTR("rpm"));
 
     /*
 #if (FILWIDTH_PIN > -1)

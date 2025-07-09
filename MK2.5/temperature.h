@@ -41,6 +41,7 @@ extern float current_filwidth;
 
 #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
   extern unsigned char soft_pwm_bed;
+  extern unsigned char soft_pwm[EXTRUDERS];
 #endif
 
 #ifdef PIDTEMP

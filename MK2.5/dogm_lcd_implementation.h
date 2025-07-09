@@ -297,6 +297,22 @@ static void lcd_implementation_status_screen()
  u8g.print("---");
  #endif
  
+ // Heater power
+ u8g.setFont(FONT_STATUSMENU);
+ u8g.setPrintPos(104,6);
+ int heater_power = (soft_pwm[0] * 100) / 255;
+ u8g.print(itostr3(heater_power));
+ u8g.print("%");
+ 
+ // Bed power (if enabled)
+ #if TEMP_SENSOR_BED != 0
+ u8g.setFont(FONT_STATUSMENU);
+ u8g.setPrintPos(104,17);
+ int bed_power = (soft_pwm_bed * 100) / 255;
+ u8g.print(itostr3(bed_power));
+ u8g.print("%");
+ #endif
+ 
  
  // X, Y, Z-Coordinates
  u8g.setFont(FONT_STATUSMENU);

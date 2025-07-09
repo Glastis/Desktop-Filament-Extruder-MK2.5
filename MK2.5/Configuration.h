@@ -893,4 +893,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #include "Configuration_adv.h"
 #include "thermistortables.h"
 
+// Force HEATER_0_MAXTEMP to be defined even if Configuration_adv.h tries to undef it
+#ifndef HEATER_0_MAXTEMP
+#define HEATER_0_MAXTEMP 275
+#endif
+
 #endif //__CONFIGURATION_H
