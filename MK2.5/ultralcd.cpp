@@ -83,6 +83,8 @@ static void menu_action_setting_edit_float5(const char* pstr, float* ptr, float 
 static void menu_action_setting_edit_float51(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float52(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float53(const char* pstr, float* ptr, float minValue, float maxValue);
+static void menu_action_setting_edit_float52_fast(const char* pstr, float* ptr, float minValue, float maxValue);
+static void menu_action_setting_edit_float53_fast(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float6(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue);
 static void menu_action_setting_edit_callback_bool(const char* pstr, bool* ptr, menuFunc_t callbackFunc);
@@ -94,6 +96,8 @@ static void menu_action_setting_edit_callback_float5(const char* pstr, float* pt
 static void menu_action_setting_edit_callback_float51(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float52(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float53(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_float52_fast(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_float53_fast(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float6(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue, menuFunc_t callbackFunc);
 
@@ -988,9 +992,9 @@ static void lcd_control_Filament_PID_menu()
 	MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
 	MENU_ITEM_EDIT(float32,MSG_FILAMENT, &filament_width_desired,1.0,9.0);
 	MENU_ITEM_EDIT(float6,MSG_LENGTH_CUTOFF, &fil_length_cutoff,1000,999000);
-	MENU_ITEM_EDIT(float53, MSG_PID_P, &fwidthKp, 0.0, 99.999);
-	MENU_ITEM_EDIT(float53, MSG_PID_I, &fwidthKi, 0.0, 99.999);
-	MENU_ITEM_EDIT(float53, MSG_PID_D, &fwidthKd, 0.0, 99.999);
+	MENU_ITEM_EDIT(float53_fast, MSG_PID_P, &fwidthKp, 0.0, 99.999);
+	MENU_ITEM_EDIT(float53_fast, MSG_PID_I, &fwidthKi, 0.0, 99.999);
+	MENU_ITEM_EDIT(float53_fast, MSG_PID_D, &fwidthKd, 0.0, 99.999);
     MENU_ITEM_EDIT(float5, "Faktor 1", &fFactor1, 1000, 50000);
     MENU_ITEM_EDIT(float32, "Faktor 2", &fFactor2, 1, 20);
     MENU_ITEM_EDIT(float32, "P Circ", &pcirc, 1, 300);
@@ -1037,10 +1041,10 @@ static void lcd_control_temperature_menu()
     MENU_ITEM_EDIT(float32, MSG_FACTOR, &autotemp_factor, 0.0, 1.0);
 #endif
 #ifdef PIDTEMP
-    MENU_ITEM_EDIT(float52, MSG_PID_P, &Kp, 1, 9990);
+    MENU_ITEM_EDIT(float52_fast, MSG_PID_P, &Kp, 1, 9990);
     // i is typically a small value so allows values below 1
-    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_I, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
-    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_D, &raw_Kd, 1, 9990, copy_and_scalePID_d);
+    MENU_ITEM_EDIT_CALLBACK(float52_fast, MSG_PID_I, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
+    MENU_ITEM_EDIT_CALLBACK(float52_fast, MSG_PID_D, &raw_Kd, 1, 9990, copy_and_scalePID_d);
 # ifdef PID_ADD_EXTRUSION_RATE
     MENU_ITEM_EDIT(float3, MSG_PID_C, &Kc, 1, 9990);
 # endif//PID_ADD_EXTRUSION_RATE
@@ -1283,6 +1287,8 @@ menu_edit_type(float, float5, ftostr5, 0.01)
 menu_edit_type(float, float51, ftostr51, 10)
 menu_edit_type(float, float52, ftostr52, 100)
 menu_edit_type(float, float53, ftostr53, 1000)
+menu_edit_type(float, float52_fast, ftostr52, 10)
+menu_edit_type(float, float53_fast, ftostr53, 100)
 menu_edit_type(float, float6, ftostr6, 0.001)
 menu_edit_type(unsigned long, long5, ftostr5, 0.01)
 
@@ -1626,31 +1632,44 @@ void lcd_buttons_update()
         enc|=(1<<1);
     if(enc != lastEncoderBits)
     {
+        unsigned long currentTime = millis();
+        unsigned long timeDiff = currentTime - lastEncoderTime;
+        
+        if(timeDiff < VERY_FAST_ROTATION_THRESHOLD) {
+            encoderSpeedMultiplier = 10;
+        } else if(timeDiff < FAST_ROTATION_THRESHOLD) {
+            encoderSpeedMultiplier = 5;
+        } else {
+            encoderSpeedMultiplier = 1;
+        }
+        
+        lastEncoderTime = currentTime;
+        
         switch(enc)
         {
         case encrot0:
             if(lastEncoderBits==encrot3)
-                encoderDiff++;
+                encoderDiff += encoderSpeedMultiplier;
             else if(lastEncoderBits==encrot1)
-                encoderDiff--;
+                encoderDiff -= encoderSpeedMultiplier;
             break;
         case encrot1:
             if(lastEncoderBits==encrot0)
-                encoderDiff++;
+                encoderDiff += encoderSpeedMultiplier;
             else if(lastEncoderBits==encrot2)
-                encoderDiff--;
+                encoderDiff -= encoderSpeedMultiplier;
             break;
         case encrot2:
             if(lastEncoderBits==encrot1)
-                encoderDiff++;
+                encoderDiff += encoderSpeedMultiplier;
             else if(lastEncoderBits==encrot3)
-                encoderDiff--;
+                encoderDiff -= encoderSpeedMultiplier;
             break;
         case encrot3:
             if(lastEncoderBits==encrot2)
-                encoderDiff++;
+                encoderDiff += encoderSpeedMultiplier;
             else if(lastEncoderBits==encrot0)
-                encoderDiff--;
+                encoderDiff -= encoderSpeedMultiplier;
             break;
         }
     }
@@ -1984,3 +2003,8 @@ void copy_and_scalePID_d()
 }
 
 #endif //ULTRA_LCD
+
+static unsigned long lastEncoderTime = 0;
+static int encoderSpeedMultiplier = 1;
+static const unsigned long FAST_ROTATION_THRESHOLD = 100;
+static const unsigned long VERY_FAST_ROTATION_THRESHOLD = 50;
