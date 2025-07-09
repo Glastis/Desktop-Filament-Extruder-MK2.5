@@ -170,8 +170,8 @@ uint32_t encoderPosition;
 
 static unsigned long lastEncoderTime = 0;
 static int encoderSpeedMultiplier = 1;
-static const unsigned long FAST_ROTATION_THRESHOLD = 100;
-static const unsigned long VERY_FAST_ROTATION_THRESHOLD = 50;
+static const unsigned long FAST_ROTATION_THRESHOLD = 200;
+static const unsigned long VERY_FAST_ROTATION_THRESHOLD = 10;
 #if (SDCARDDETECT > 0)
 bool lcd_oldcardstatus;
 #endif
@@ -1641,9 +1641,9 @@ void lcd_buttons_update()
         unsigned long timeDiff = currentTime - lastEncoderTime;
         
         if(timeDiff < VERY_FAST_ROTATION_THRESHOLD) {
-            encoderSpeedMultiplier = 10;
-        } else if(timeDiff < FAST_ROTATION_THRESHOLD) {
             encoderSpeedMultiplier = 5;
+        } else if(timeDiff < FAST_ROTATION_THRESHOLD) {
+            encoderSpeedMultiplier = 2;
         } else {
             encoderSpeedMultiplier = 1;
         }
